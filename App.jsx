@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -10,39 +10,53 @@ import {
   Modal,
   Pressable,
   StyleSheet,
+  ActivityIndicator,
 } from 'react-native';
 
 const App = () => {
-  // State untuk menyimpan nama pengguna
+  const [loading, setLoading] = useState(true);
   const [name, setName] = useState('');
-  // State untuk kontrol tampilan modal
   const [modalVisible, setModalVisible] = useState(false);
 
-  // Data pengingat kesehatan harian
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setLoading(false);
+    }, 2500);
+    return () => clearTimeout(timer);
+  }, []);
+
   const reminders = [
     { id: '1', title: 'Minum Air Pagi' },
     { id: '2', title: 'Stretching 5 Menit' },
     { id: '3', title: 'Cek Detak Jantung' },
   ];
 
-  // Daftar URL gambar yang relevan dengan gaya hidup sehat
   const imageUrls = [
-    'https://images.unsplash.com/photo-1587502536263-9298f1a8b9ef?auto=format&fit=crop&w=800&q=60', // Detak Jantung
-    'https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?auto=format&fit=crop&w=800&q=60', // Jogging
-    'https://images.unsplash.com/photo-1514996937319-344454492b37?auto=format&fit=crop&w=800&q=60', // Yoga
-    'https://images.unsplash.com/photo-1512621776951-a57141f2eefd?auto=format&fit=crop&w=800&q=60', // Air Minum
-    'https://images.unsplash.com/photo-1605296867304-46d5465a13f1?auto=format&fit=crop&w=800&q=60', // Healthy Food
+    'https://images.unsplash.com/photo-1587502536263-9298f1a8b9ef?auto=format&fit=crop&w=800&q=60',
+    'https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?auto=format&fit=crop&w=800&q=60',
+    'https://images.unsplash.com/photo-1514996937319-344454492b37?auto=format&fit=crop&w=800&q=60',
+    'https://images.unsplash.com/photo-1512621776951-a57141f2eefd?auto=format&fit=crop&w=800&q=60',
+    'https://images.unsplash.com/photo-1605296867304-46d5465a13f1?auto=format&fit=crop&w=800&q=60',
   ];
+
+  if (loading) {
+    return (
+      <View style={styles.loadingContainer}>
+        <Image source={require('./assets/logo/logo.png')} style={styles.logo} />
+        <Text style={styles.appName}>RemindMe</Text>
+        <ActivityIndicator size="large" color="#10b981" />
+        <Text style={styles.loadingText}>Sedang memuat...</Text>
+      </View>
+    );
+  }
 
   return (
     <ScrollView style={styles.container}>
-      {/* Header aplikasi */}
       <View style={styles.header}>
         <Text style={styles.title}>RemindMe!</Text>
         <Text style={styles.subText}>Aplikasi Cek Kesehatan Harian</Text>
       </View>
 
-      {/* Gambar-gambar motivasi hidup sehat */}
       <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.imageScroll}>
         {imageUrls.map((url, index) => (
           <Image
@@ -54,7 +68,6 @@ const App = () => {
         ))}
       </ScrollView>
 
-      {/* Input nama pengguna */}
       <View style={styles.inputSection}>
         <Text style={styles.label}>Masukkan Nama Anda:</Text>
         <TextInput
@@ -68,12 +81,10 @@ const App = () => {
         )}
       </View>
 
-      {/* Tombol untuk melihat reminder */}
       <View style={styles.buttonSection}>
         <Button title="Lihat Reminder" color="#10b981" onPress={() => setModalVisible(true)} />
       </View>
 
-      {/* Daftar kegiatan hari ini */}
       <Text style={styles.subTitle}>Jadwal Kesehatan Hari Ini</Text>
       <FlatList
         data={reminders}
@@ -85,7 +96,6 @@ const App = () => {
         )}
       />
 
-      {/* Modal reminder */}
       <Modal
         animationType="slide"
         transparent={true}
@@ -108,13 +118,34 @@ const App = () => {
   );
 };
 
-// Style komponen-komponen aplikasi
 const styles = StyleSheet.create({
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#f0fdf4',
+  },
+  logo: {
+    width: 120,
+    height: 120,
+    marginBottom: 20,
+    resizeMode: 'contain',
+  },
+  appName: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: '#047857',
+    marginBottom: 10,
+  },
+  loadingText: {
+    marginTop: 10,
+    fontSize: 14,
+    color: '#047857',
+  },
   container: { flex: 1, backgroundColor: '#f0fdf4', padding: 16 },
   header: { alignItems: 'center', marginBottom: 10 },
   title: { fontSize: 26, fontWeight: 'bold', color: '#047857' },
   subText: { fontSize: 14, color: '#065f46' },
-
   imageScroll: { marginVertical: 10 },
   scrollImage: {
     width: 180,
@@ -122,7 +153,6 @@ const styles = StyleSheet.create({
     marginRight: 10,
     borderRadius: 12,
   },
-
   inputSection: { marginBottom: 20 },
   label: { fontSize: 16, marginBottom: 5, color: '#065f46' },
   input: {
@@ -137,7 +167,6 @@ const styles = StyleSheet.create({
     color: '#065f46',
     fontSize: 14,
   },
-
   buttonSection: { marginBottom: 20 },
   subTitle: { fontSize: 18, fontWeight: '600', marginVertical: 10 },
   listItem: {
@@ -150,7 +179,6 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#065f46',
   },
-
   modalContainer: {
     flex: 1,
     justifyContent: 'center',
