@@ -13,15 +13,19 @@ import {
 } from 'react-native';
 
 const App = () => {
+  // State untuk menyimpan nama pengguna
   const [name, setName] = useState('');
+  // State untuk kontrol tampilan modal
   const [modalVisible, setModalVisible] = useState(false);
 
+  // Data pengingat kesehatan harian
   const reminders = [
     { id: '1', title: 'Minum Air Pagi' },
     { id: '2', title: 'Stretching 5 Menit' },
     { id: '3', title: 'Cek Detak Jantung' },
   ];
 
+  // Daftar URL gambar yang relevan dengan gaya hidup sehat
   const imageUrls = [
     'https://images.unsplash.com/photo-1587502536263-9298f1a8b9ef?auto=format&fit=crop&w=800&q=60', // Detak Jantung
     'https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?auto=format&fit=crop&w=800&q=60', // Jogging
@@ -32,11 +36,13 @@ const App = () => {
 
   return (
     <ScrollView style={styles.container}>
+      {/* Header aplikasi */}
       <View style={styles.header}>
         <Text style={styles.title}>RemindMe!</Text>
+        <Text style={styles.subText}>Aplikasi Cek Kesehatan Harian</Text>
       </View>
 
-      {/* Horizontal Scroll Images */}
+      {/* Gambar-gambar motivasi hidup sehat */}
       <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.imageScroll}>
         {imageUrls.map((url, index) => (
           <Image
@@ -48,6 +54,7 @@ const App = () => {
         ))}
       </ScrollView>
 
+      {/* Input nama pengguna */}
       <View style={styles.inputSection}>
         <Text style={styles.label}>Masukkan Nama Anda:</Text>
         <TextInput
@@ -56,24 +63,29 @@ const App = () => {
           value={name}
           onChangeText={(text) => setName(text)}
         />
+        {name !== '' && (
+          <Text style={styles.greeting}>Halo, {name}! Yuk mulai cek kesehatanmu hari ini.</Text>
+        )}
       </View>
 
+      {/* Tombol untuk melihat reminder */}
       <View style={styles.buttonSection}>
-        <Button title="Lihat Reminder" onPress={() => setModalVisible(true)} />
+        <Button title="Lihat Reminder" color="#10b981" onPress={() => setModalVisible(true)} />
       </View>
 
+      {/* Daftar kegiatan hari ini */}
       <Text style={styles.subTitle}>Jadwal Kesehatan Hari Ini</Text>
       <FlatList
         data={reminders}
         keyExtractor={(item) => item.id}
         renderItem={({ item }) => (
           <View style={styles.listItem}>
-            <Text>{item.title}</Text>
+            <Text style={styles.listText}>• {item.title}</Text>
           </View>
         )}
       />
 
-      {/* Modal */}
+      {/* Modal reminder */}
       <Modal
         animationType="slide"
         transparent={true}
@@ -86,10 +98,7 @@ const App = () => {
             {reminders.map((item) => (
               <Text key={item.id}>• {item.title}</Text>
             ))}
-            <Pressable
-              style={styles.closeButton}
-              onPress={() => setModalVisible(false)}
-            >
+            <Pressable style={styles.closeButton} onPress={() => setModalVisible(false)}>
               <Text style={styles.closeButtonText}>Tutup</Text>
             </Pressable>
           </View>
@@ -99,10 +108,12 @@ const App = () => {
   );
 };
 
+// Style komponen-komponen aplikasi
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#f0fdf4', padding: 16 },
   header: { alignItems: 'center', marginBottom: 10 },
-  title: { fontSize: 24, fontWeight: 'bold', color: '#047857' },
+  title: { fontSize: 26, fontWeight: 'bold', color: '#047857' },
+  subText: { fontSize: 14, color: '#065f46' },
 
   imageScroll: { marginVertical: 10 },
   scrollImage: {
@@ -121,6 +132,11 @@ const styles = StyleSheet.create({
     padding: 10,
     backgroundColor: '#ffffff',
   },
+  greeting: {
+    marginTop: 8,
+    color: '#065f46',
+    fontSize: 14,
+  },
 
   buttonSection: { marginBottom: 20 },
   subTitle: { fontSize: 18, fontWeight: '600', marginVertical: 10 },
@@ -129,6 +145,10 @@ const styles = StyleSheet.create({
     backgroundColor: '#d1fae5',
     marginVertical: 5,
     borderRadius: 10,
+  },
+  listText: {
+    fontSize: 16,
+    color: '#065f46',
   },
 
   modalContainer: {
