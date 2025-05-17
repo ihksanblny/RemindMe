@@ -6,6 +6,8 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 import SplashScreen from './screen/SplashScreen';
 import HomeScreen from './screen/HomeScreen';
 import ReminderScreen from './screen/ReminderScreen';
+import DailyCheckScreen from './screen/DailyCheckScreen';
+import HealthTipsScreen from './screen/HealthTipsScreen';
 
 enableScreens();
 const Stack = createNativeStackNavigator();
@@ -18,6 +20,8 @@ const App = () => {
         <Stack.Screen name="Splash" component={SplashScreen} />
         <Stack.Screen name="Home" component={HomeScreen} />
         <Stack.Screen name="Reminder" component={ReminderScreen} />
+        <Stack.Screen name="DailyCheck" component={DailyCheckScreen} />
+        <Stack.Screen name="HealthTips" component={HealthTipsScreen} />
       </Stack.Navigator>
     </NavigationContainer>
     </SafeAreaProvider>

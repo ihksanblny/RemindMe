@@ -58,11 +58,24 @@ const HomeScreen = ({ navigation }) => {
         )}
       </View>
 
+      {/* Bagian Tombol Navigasi */}
       <View style={styles.buttonSection}>
         <Button
           title="Lihat Reminder"
           color="#10b981"
           onPress={() => navigation.navigate('Reminder', { reminders })}
+        />
+        <View style={styles.spacer} />
+        <Button
+          title="Cek Harian"
+          color="#06b6d4"
+          onPress={() => navigation.navigate('DailyCheck')}
+        />
+        <View style={styles.spacer} />
+        <Button
+          title="Tips Kesehatan"
+          color="#6366f1"
+          onPress={() => navigation.navigate('HealthTips')}
         />
       </View>
 
@@ -106,7 +119,13 @@ const styles = StyleSheet.create({
     color: '#065f46',
     fontSize: 14,
   },
-  buttonSection: { marginBottom: 20 },
+  buttonSection: {
+    marginBottom: 20,
+    gap: 10,
+  },
+  spacer: {
+    height: 10,
+  },
   subTitle: { fontSize: 18, fontWeight: '600', marginVertical: 10 },
   listItem: {
     padding: 12,
