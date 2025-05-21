@@ -1,8 +1,10 @@
-import React from 'react';
-import { View, Text, FlatList, Pressable, StyleSheet } from 'react-native';
+// ReminderScreen.js
+import React, { useContext } from 'react';
+import { View, Text, FlatList, StyleSheet } from 'react-native';
+import { ReminderContext } from '../context/ReminderContext';
 
-const ReminderScreen = ({ route, navigation }) => {
-  const { reminders } = route.params;
+export default function ReminderScreen() {
+  const { reminders } = useContext(ReminderContext);
 
   return (
     <View style={styles.container}>
@@ -10,44 +12,25 @@ const ReminderScreen = ({ route, navigation }) => {
       <FlatList
         data={reminders}
         keyExtractor={(item) => item.id}
-        renderItem={({ item }) => (
-          <Text style={styles.reminderText}>• {item.title}</Text>
-        )}
+        renderItem={({ item }) => <Text style={styles.item}>• {item.title}</Text>}
       />
-      <Pressable style={styles.closeButton} onPress={() => navigation.goBack()}>
-        <Text style={styles.closeButtonText}>Kembali</Text>
-      </Pressable>
     </View>
   );
-};
+}
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
-    backgroundColor: '#ffffff',
     padding: 20,
-    justifyContent: 'center',
+    backgroundColor: 'white',
+    flex: 1,
   },
   title: {
     fontSize: 20,
-    marginBottom: 10,
     fontWeight: 'bold',
-    color: '#047857',
-    textAlign: 'center',
+    marginBottom: 10,
   },
-  reminderText: {
+  item: {
     fontSize: 16,
-    marginVertical: 2,
-    color: '#065f46',
+    marginVertical: 5,
   },
-  closeButton: {
-    marginTop: 20,
-    backgroundColor: '#10b981',
-    padding: 10,
-    borderRadius: 8,
-    alignItems: 'center',
-  },
-  closeButtonText: { color: '#fff', fontWeight: 'bold' },
 });
-
-export default ReminderScreen;

@@ -8,6 +8,7 @@ import {
   Image,
   FlatList,
   StyleSheet,
+  TouchableOpacity,
 } from 'react-native';
 
 const HomeScreen = ({ navigation }) => {
@@ -29,19 +30,12 @@ const HomeScreen = ({ navigation }) => {
 
   return (
     <ScrollView style={styles.container}>
-      <View style={styles.header}>
-        <Text style={styles.title}>RemindMe!</Text>
-        <Text style={styles.subText}>Aplikasi Cek Kesehatan Harian</Text>
-      </View>
+      <Text style={styles.title}>Selamat Datang di RemindMe</Text>
+      <Text style={styles.subtitle}>Aplikasi Cek Kesehatan Harian Anda</Text>
 
       <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.imageScroll}>
         {imageUrls.map((url, index) => (
-          <Image
-            key={index}
-            source={{ uri: url }}
-            style={styles.scrollImage}
-            resizeMode="cover"
-          />
+          <Image key={index} source={{ uri: url }} style={styles.scrollImage} />
         ))}
       </ScrollView>
 
@@ -58,25 +52,27 @@ const HomeScreen = ({ navigation }) => {
         )}
       </View>
 
-      {/* Bagian Tombol Navigasi */}
-      <View style={styles.buttonSection}>
-        <Button
-          title="Lihat Reminder"
-          color="#10b981"
+      <View style={styles.buttonContainer}>
+        <TouchableOpacity
+          style={[styles.cardButton, { backgroundColor: '#10b981' }]}
           onPress={() => navigation.navigate('Reminder', { reminders })}
-        />
-        <View style={styles.spacer} />
-        <Button
-          title="Cek Harian"
-          color="#06b6d4"
+        >
+          <Text style={styles.buttonText}>Lihat Reminder</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={[styles.cardButton, { backgroundColor: '#06b6d4' }]}
           onPress={() => navigation.navigate('DailyCheck')}
-        />
-        <View style={styles.spacer} />
-        <Button
-          title="Tips Kesehatan"
-          color="#6366f1"
+        >
+          <Text style={styles.buttonText}>Cek Harian</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={[styles.cardButton, { backgroundColor: '#6366f1' }]}
           onPress={() => navigation.navigate('HealthTips')}
-        />
+        >
+          <Text style={styles.buttonText}>Tips Kesehatan</Text>
+        </TouchableOpacity>
       </View>
 
       <Text style={styles.subTitle}>Jadwal Kesehatan Hari Ini</Text>
@@ -95,18 +91,36 @@ const HomeScreen = ({ navigation }) => {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#f0fdf4', padding: 16 },
-  header: { alignItems: 'center', marginBottom: 10 },
-  title: { fontSize: 26, fontWeight: 'bold', color: '#047857' },
-  subText: { fontSize: 14, color: '#065f46' },
-  imageScroll: { marginVertical: 10 },
+  title: {
+    fontSize: 26,
+    fontWeight: 'bold',
+    color: '#065f46',
+    textAlign: 'center',
+    marginBottom: 4,
+  },
+  subtitle: {
+    fontSize: 16,
+    color: '#047857',
+    textAlign: 'center',
+    marginBottom: 12,
+  },
+  imageScroll: {
+    marginBottom: 16,
+  },
   scrollImage: {
     width: 180,
     height: 120,
-    marginRight: 10,
     borderRadius: 12,
+    marginRight: 10,
   },
-  inputSection: { marginBottom: 20 },
-  label: { fontSize: 16, marginBottom: 5, color: '#065f46' },
+  inputSection: {
+    marginBottom: 20,
+  },
+  label: {
+    fontSize: 16,
+    marginBottom: 5,
+    color: '#065f46',
+  },
   input: {
     borderWidth: 1,
     borderColor: '#a7f3d0',
@@ -119,19 +133,33 @@ const styles = StyleSheet.create({
     color: '#065f46',
     fontSize: 14,
   },
-  buttonSection: {
-    marginBottom: 20,
-    gap: 10,
+  buttonContainer: {
+    marginBottom: 24,
+    gap: 12,
   },
-  spacer: {
-    height: 10,
+  cardButton: {
+    paddingVertical: 16,
+    paddingHorizontal: 24,
+    borderRadius: 12,
+    marginBottom: 10,
+    alignItems: 'center',
+    elevation: 2,
   },
-  subTitle: { fontSize: 18, fontWeight: '600', marginVertical: 10 },
+  buttonText: {
+    color: '#ffffff',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  subTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    marginBottom: 10,
+  },
   listItem: {
     padding: 12,
     backgroundColor: '#d1fae5',
-    marginVertical: 5,
     borderRadius: 10,
+    marginBottom: 6,
   },
   listText: {
     fontSize: 16,
