@@ -1,0 +1,21 @@
+{
+  "migIndex": 1,
+  "data": [
+    {
+      "path": "assets/fonts/OFL.txt",
+      "sha1": "9bc5e505303a773fa73ab272c1c0ee1862a2c28b"
+    },
+    {
+      "path": "assets/fonts/Tienne-Black.ttf",
+      "sha1": "f5721684db7adc964921fe5354acc436936ae9b4"
+    },
+    {
+      "path": "assets/fonts/Tienne-Bold.ttf",
+      "sha1": "6df5707954469c662740ce27ae3336177aa25c90"
+    },
+    {
+      "path": "assets/fonts/Tienne-Regular.ttf",
+      "sha1": "d1fda92e5cfdedd2390840476f8608a15bac2885"
+    }
+  ]
+}
