@@ -4,7 +4,7 @@ import { View, Image, ActivityIndicator, StyleSheet, Dimensions } from 'react-na
 const SplashScreen = ({ navigation }) => {
   useEffect(() => {
     setTimeout(() => {
-      navigation.replace('MainTabs'); // Ganti 'MainTabs' dengan nama screen utama Anda
+      navigation.replace('MainAppTabs'); // Ganti 'MainTabs' dengan nama screen utama Anda
     }, 2000);
   }, []);
 

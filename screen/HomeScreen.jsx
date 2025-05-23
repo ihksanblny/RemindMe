@@ -1,170 +1,231 @@
-import React, { useState } from 'react';
+// screen/HomeScreen.jsx
+import React, { useState, useContext, useMemo } from 'react';
 import {
   View,
   Text,
-  TextInput,
-  Button,
   ScrollView,
   Image,
   FlatList,
   StyleSheet,
   TouchableOpacity,
+  SafeAreaView,
 } from 'react-native';
+import Ionicons from 'react-native-vector-icons/Ionicons';
+import { ReminderContext } from '../context/ReminderContext'; // 1. Impor Context
+import COLORS from '../constant/colors'; // Pastikan path ini benar
+
+// Komponen Kartu untuk Dashboard
+const SummaryCard = ({ icon, title, value, color, onPress }) => (
+  <TouchableOpacity style={[styles.summaryCard, { backgroundColor: color }]} onPress={onPress} activeOpacity={0.8}>
+    <Ionicons name={icon} size={32} color={COLORS.white} />
+    <Text style={styles.summaryCardTitle}>{title}</Text>
+    <Text style={styles.summaryCardValue}>{value}</Text>
+  </TouchableOpacity>
+);
 
 const HomeScreen = ({ navigation }) => {
-  const [name, setName] = useState('');
+  const [name, setName] = useState('Pengguna'); // Nama default
+  const { reminders } = useContext(ReminderContext); // 2. Ambil data dinamis dari context
 
-  const reminders = [
-    { id: '1', title: 'Minum Air Pagi' },
-    { id: '2', title: 'Stretching 5 Menit' },
-    { id: '3', title: 'Cek Detak Jantung' },
-  ];
+  // 3. Logika untuk memfilter dan mengurutkan pengingat yang akan datang
+  const upcomingReminders = useMemo(() => {
+    const now = new Date();
+    return reminders
+      .filter(r => new Date(r.date) > now) // Ambil pengingat di masa depan
+      .sort((a, b) => new Date(a.date) - new Date(b.date)) // Urutkan dari yang terdekat
+      .slice(0, 3); // Ambil 3 teratas
+  }, [reminders]);
 
   const imageUrls = [
     'https://images.unsplash.com/photo-1587502536263-9298f1a8b9ef?auto=format&fit=crop&w=800&q=60',
     'https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?auto=format&fit=crop&w=800&q=60',
-    'https://images.unsplash.com/photo-1514996937319-344454492b37?auto=format&fit=crop&w=800&q=60',
-    'https://images.unsplash.com/photo-1512621776951-a57141f2eefd?auto=format&fit=crop&w=800&q=60',
     'https://images.unsplash.com/photo-1605296867304-46d5465a13f1?auto=format&fit=crop&w=800&q=60',
   ];
 
   return (
-    <ScrollView style={styles.container}>
-      <Text style={styles.title}>Selamat Datang di RemindMe</Text>
-      <Text style={styles.subtitle}>Aplikasi Cek Kesehatan Harian Anda</Text>
+    <SafeAreaView style={styles.safeArea}>
+      <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
+        {/* Bagian Header */}
+        <View style={styles.header}>
+          <Text style={styles.title}>Selamat Datang,</Text>
+          <Text style={styles.subtitle}>{name}!</Text>
+        </View>
 
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.imageScroll}>
-        {imageUrls.map((url, index) => (
-          <Image key={index} source={{ uri: url }} style={styles.scrollImage} />
-        ))}
+        {/* Scroll Gambar Horizontal */}
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.imageScrollContainer}>
+          {imageUrls.map((url, index) => (
+            <Image key={index} source={{ uri: url }} style={styles.scrollImage} />
+          ))}
+        </ScrollView>
+        
+        {/* 4. Tampilan Dashboard Baru */}
+        <View style={styles.dashboardContainer}>
+          <SummaryCard
+            icon="alarm-outline"
+            title="Total Pengingat"
+            value={reminders.length}
+            color={COLORS.primary}
+            onPress={() => navigation.navigate('Reminder')}
+          />
+          <SummaryCard
+            icon="leaf-outline"
+            title="Tips Sehat"
+            value="Lihat"
+            color={COLORS.accentIndigo}
+            onPress={() => navigation.navigate('HealthTips')}
+          />
+          <SummaryCard
+            icon="pulse-outline"
+            title="Cek Harian"
+            value="Mulai"
+            color={COLORS.accentCyan}
+            onPress={() => navigation.navigate('DailyCheck')}
+          />
+        </View>
+
+        {/* 5. Daftar Dinamis Pengingat Mendatang */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Segera Dilakukan</Text>
+          {upcomingReminders.length > 0 ? (
+            <FlatList
+              data={upcomingReminders}
+              keyExtractor={(item) => item.id}
+              scrollEnabled={false}
+              renderItem={({ item }) => {
+                const itemDate = new Date(item.date);
+                const formattedTime = itemDate.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
+                return (
+                  <TouchableOpacity 
+                    style={styles.listItem}
+                    onPress={() => navigation.navigate('Reminder', { screen: 'ReminderDetail', params: { reminderId: item.id } })}
+                  >
+                    <Ionicons name={item.icon} size={24} color={COLORS.primaryDark} style={styles.listItemIcon} />
+                    <View style={styles.listItemTextContainer}>
+                        <Text style={styles.listText}>{item.title}</Text>
+                        <Text style={styles.listSubText}>Hari ini, pukul {formattedTime}</Text>
+                    </View>
+                    <Ionicons name="chevron-forward-outline" size={22} color={COLORS.textSecondary} />
+                  </TouchableOpacity>
+                )
+              }}
+            />
+          ) : (
+            <View style={styles.emptyListContainer}>
+              <Text style={styles.emptyListText}>Tidak ada pengingat yang akan datang.</Text>
+            </View>
+          )}
+        </View>
       </ScrollView>
-
-      <View style={styles.inputSection}>
-        <Text style={styles.label}>Masukkan Nama Anda:</Text>
-        <TextInput
-          style={styles.input}
-          placeholder="Nama Lengkap"
-          value={name}
-          onChangeText={(text) => setName(text)}
-        />
-        {name !== '' && (
-          <Text style={styles.greeting}>Halo, {name}! Yuk mulai cek kesehatanmu hari ini.</Text>
-        )}
-      </View>
-
-      <View style={styles.buttonContainer}>
-        <TouchableOpacity
-          style={[styles.cardButton, { backgroundColor: '#10b981' }]}
-          onPress={() => navigation.navigate('Reminder', { reminders })}
-        >
-          <Text style={styles.buttonText}>Lihat Reminder</Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          style={[styles.cardButton, { backgroundColor: '#06b6d4' }]}
-          onPress={() => navigation.navigate('DailyCheck')}
-        >
-          <Text style={styles.buttonText}>Cek Harian</Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          style={[styles.cardButton, { backgroundColor: '#6366f1' }]}
-          onPress={() => navigation.navigate('HealthTips')}
-        >
-          <Text style={styles.buttonText}>Tips Kesehatan</Text>
-        </TouchableOpacity>
-      </View>
-
-      <Text style={styles.subTitle}>Jadwal Kesehatan Hari Ini</Text>
-      <FlatList
-        data={reminders}
-        keyExtractor={(item) => item.id}
-        renderItem={({ item }) => (
-          <View style={styles.listItem}>
-            <Text style={styles.listText}>• {item.title}</Text>
-          </View>
-        )}
-      />
-    </ScrollView>
+    </SafeAreaView>
   );
 };
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#f0fdf4', padding: 16 },
+  safeArea: {
+    flex: 1,
+    backgroundColor: COLORS.background,
+  },
+  scrollView: {
+    flex: 1,
+  },
+  header: {
+    paddingHorizontal: 20,
+    paddingTop: 20,
+    paddingBottom: 10,
+  },
   title: {
-    fontSize: 26,
+    fontSize: 28,
     fontWeight: 'bold',
-    color: '#065f46',
-    textAlign: 'center',
-    marginBottom: 4,
+    color: COLORS.primaryDark,
   },
   subtitle: {
-    fontSize: 16,
-    color: '#047857',
-    textAlign: 'center',
-    marginBottom: 12,
+    fontSize: 22,
+    color: COLORS.textSecondary,
+    marginTop: -5,
   },
-  imageScroll: {
-    marginBottom: 16,
+  imageScrollContainer: {
+    paddingLeft: 20,
+    marginTop: 10,
   },
   scrollImage: {
-    width: 180,
-    height: 120,
-    borderRadius: 12,
-    marginRight: 10,
+    width: 250,
+    height: 140,
+    borderRadius: 16,
+    marginRight: 16,
   },
-  inputSection: {
-    marginBottom: 20,
+  dashboardContainer: {
+    paddingHorizontal: 20,
+    marginTop: 20,
   },
-  label: {
-    fontSize: 16,
-    marginBottom: 5,
-    color: '#065f46',
+  summaryCard: {
+    borderRadius: 16,
+    padding: 20,
+    marginBottom: 12,
+    elevation: 4,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2},
+    shadowOpacity: 0.1,
+    shadowRadius: 5,
   },
-  input: {
-    borderWidth: 1,
-    borderColor: '#a7f3d0',
-    borderRadius: 8,
-    padding: 10,
-    backgroundColor: '#ffffff',
-  },
-  greeting: {
-    marginTop: 8,
-    color: '#065f46',
-    fontSize: 14,
-  },
-  buttonContainer: {
-    marginBottom: 24,
-    gap: 12,
-  },
-  cardButton: {
-    paddingVertical: 16,
-    paddingHorizontal: 24,
-    borderRadius: 12,
-    marginBottom: 10,
-    alignItems: 'center',
-    elevation: 2,
-  },
-  buttonText: {
-    color: '#ffffff',
-    fontSize: 16,
-    fontWeight: '600',
-  },
-  subTitle: {
+  summaryCardTitle: {
+    color: COLORS.white,
     fontSize: 18,
     fontWeight: '600',
-    marginBottom: 10,
+    marginTop: 8,
+  },
+  summaryCardValue: {
+    color: COLORS.white,
+    fontSize: 24,
+    fontWeight: 'bold',
+    marginTop: 4,
+  },
+  section: {
+    paddingHorizontal: 20,
+    marginTop: 20,
+    marginBottom: 24,
+  },
+  sectionTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: COLORS.primaryDark,
+    marginBottom: 12,
   },
   listItem: {
-    padding: 12,
-    backgroundColor: '#d1fae5',
-    borderRadius: 10,
-    marginBottom: 6,
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: COLORS.surface,
+    padding: 16,
+    borderRadius: 12,
+    marginBottom: 10,
+    elevation: 2,
+  },
+  listItemIcon: {
+    marginRight: 16,
+  },
+  listItemTextContainer: {
+    flex: 1,
   },
   listText: {
     fontSize: 16,
-    color: '#065f46',
+    color: COLORS.text,
+    fontWeight: '600',
   },
+  listSubText: {
+    fontSize: 14,
+    color: COLORS.textSecondary,
+    marginTop: 2,
+  },
+  emptyListContainer: {
+    padding: 20,
+    backgroundColor: COLORS.surface,
+    borderRadius: 12,
+    alignItems: 'center',
+  },
+  emptyListText: {
+    fontSize: 15,
+    color: COLORS.textSecondary,
+    textAlign: 'center',
+  }
 });
 
 export default HomeScreen;

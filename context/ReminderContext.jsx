@@ -2,13 +2,10 @@
 import React, { createContext, useState } from 'react';
 
 export const ReminderContext = createContext();
+import Ionicons from 'react-native-vector-icons/Ionicons';
 
 export const ReminderProvider = ({ children }) => {
-  const [reminders, setReminders] = useState([
-    { id: '1', title: 'Minum Air Pagi' },
-    { id: '2', title: 'Stretching 5 Menit' },
-    { id: '3', title: 'Cek Detak Jantung' },
-  ]);
+  const [reminders, setReminders] = useState([]);
 
   return (
     <ReminderContext.Provider value={{ reminders, setReminders }}>
