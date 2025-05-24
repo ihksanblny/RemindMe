@@ -1,39 +1,39 @@
-// screen/HomeScreen.jsx
-import React, { useState, useContext, useMemo } from 'react';
+import React, { useState, useContext, useMemo, useRef, useEffect } from 'react';
 import {
   View,
   Text,
   ScrollView,
   Image,
+  Animated,
   FlatList,
   StyleSheet,
   TouchableOpacity,
   SafeAreaView,
 } from 'react-native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
-import { ReminderContext } from '../context/ReminderContext'; // 1. Impor Context
-import COLORS from '../constant/colors'; // Pastikan path ini benar
+import { ReminderContext } from '../context/ReminderContext';
+import COLORS from '../constant/colors';
 
-// Komponen Kartu untuk Dashboard
-const SummaryCard = ({ icon, title, value, color, onPress }) => (
-  <TouchableOpacity style={[styles.summaryCard, { backgroundColor: color }]} onPress={onPress} activeOpacity={0.8}>
-    <Ionicons name={icon} size={32} color={COLORS.white} />
-    <Text style={styles.summaryCardTitle}>{title}</Text>
-    <Text style={styles.summaryCardValue}>{value}</Text>
-  </TouchableOpacity>
+const SummaryCard = ({ icon, title, value, color, onPress, animation }) => (
+  <Animated.View style={[styles.summaryCard, { backgroundColor: color }, animation]}>
+    <TouchableOpacity onPress={onPress} activeOpacity={0.8}>
+      <Ionicons name={icon} size={32} color={COLORS.white} />
+      <Text style={styles.summaryCardTitle}>{title}</Text>
+      <Text style={styles.summaryCardValue}>{value}</Text>
+    </TouchableOpacity>
+  </Animated.View>
 );
 
 const HomeScreen = ({ navigation }) => {
-  const [name, setName] = useState('Pengguna'); // Nama default
-  const { reminders } = useContext(ReminderContext); // 2. Ambil data dinamis dari context
+  const [name, setName] = useState('Pengguna');
+  const { reminders } = useContext(ReminderContext);
 
-  // 3. Logika untuk memfilter dan mengurutkan pengingat yang akan datang
   const upcomingReminders = useMemo(() => {
     const now = new Date();
     return reminders
-      .filter(r => new Date(r.date) > now) // Ambil pengingat di masa depan
-      .sort((a, b) => new Date(a.date) - new Date(b.date)) // Urutkan dari yang terdekat
-      .slice(0, 3); // Ambil 3 teratas
+      .filter(r => new Date(r.date) > now)
+      .sort((a, b) => new Date(a.date) - new Date(b.date))
+      .slice(0, 3);
   }, [reminders]);
 
   const imageUrls = [
@@ -42,23 +42,63 @@ const HomeScreen = ({ navigation }) => {
     'https://images.unsplash.com/photo-1605296867304-46d5465a13f1?auto=format&fit=crop&w=800&q=60',
   ];
 
+  // Animasi Summary Cards
+  const summaryAnimations = [useRef(new Animated.Value(0)).current, useRef(new Animated.Value(0)).current, useRef(new Animated.Value(0)).current];
+
+  // Animasi Reminder List
+  const reminderAnimations = useRef([]);
+
+  useEffect(() => {
+    // Jalankan animasi summary card
+    Animated.stagger(200,
+      summaryAnimations.map(anim =>
+        Animated.timing(anim, {
+          toValue: 1,
+          duration: 500,
+          useNativeDriver: true,
+        })
+      )
+    ).start(() => {
+      // Inisialisasi animasi reminder
+      reminderAnimations.current = upcomingReminders.map(() => ({
+        opacity: new Animated.Value(0),
+        translateY: new Animated.Value(20),
+      }));
+
+      Animated.stagger(150, reminderAnimations.current.map(anim =>
+        Animated.parallel([
+          Animated.timing(anim.opacity, {
+            toValue: 1,
+            duration: 400,
+            useNativeDriver: true,
+          }),
+          Animated.timing(anim.translateY, {
+            toValue: 0,
+            duration: 400,
+            useNativeDriver: true,
+          }),
+        ])
+      )).start();
+    });
+  }, [reminders]);
+
   return (
     <SafeAreaView style={styles.safeArea}>
       <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
-        {/* Bagian Header */}
+        {/* Header */}
         <View style={styles.header}>
           <Text style={styles.title}>Selamat Datang,</Text>
           <Text style={styles.subtitle}>{name}!</Text>
         </View>
 
-        {/* Scroll Gambar Horizontal */}
+        {/* Gambar Scroll */}
         <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.imageScrollContainer}>
           {imageUrls.map((url, index) => (
             <Image key={index} source={{ uri: url }} style={styles.scrollImage} />
           ))}
         </ScrollView>
-        
-        {/* 4. Tampilan Dashboard Baru */}
+
+        {/* Summary Cards */}
         <View style={styles.dashboardContainer}>
           <SummaryCard
             icon="alarm-outline"
@@ -66,6 +106,10 @@ const HomeScreen = ({ navigation }) => {
             value={reminders.length}
             color={COLORS.primary}
             onPress={() => navigation.navigate('Reminder')}
+            animation={{
+              opacity: summaryAnimations[0],
+              transform: [{ translateY: summaryAnimations[0].interpolate({ inputRange: [0, 1], outputRange: [20, 0] }) }],
+            }}
           />
           <SummaryCard
             icon="leaf-outline"
@@ -73,6 +117,10 @@ const HomeScreen = ({ navigation }) => {
             value="Lihat"
             color={COLORS.accentIndigo}
             onPress={() => navigation.navigate('HealthTips')}
+            animation={{
+              opacity: summaryAnimations[1],
+              transform: [{ translateY: summaryAnimations[1].interpolate({ inputRange: [0, 1], outputRange: [20, 0] }) }],
+            }}
           />
           <SummaryCard
             icon="pulse-outline"
@@ -80,33 +128,49 @@ const HomeScreen = ({ navigation }) => {
             value="Mulai"
             color={COLORS.accentCyan}
             onPress={() => navigation.navigate('DailyCheck')}
+            animation={{
+              opacity: summaryAnimations[2],
+              transform: [{ translateY: summaryAnimations[2].interpolate({ inputRange: [0, 1], outputRange: [20, 0] }) }],
+            }}
           />
         </View>
 
-        {/* 5. Daftar Dinamis Pengingat Mendatang */}
+        {/* Upcoming Reminders */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Segera Dilakukan</Text>
           {upcomingReminders.length > 0 ? (
-            <FlatList
+            <Animated.FlatList
               data={upcomingReminders}
               keyExtractor={(item) => item.id}
               scrollEnabled={false}
-              renderItem={({ item }) => {
+              renderItem={({ item, index }) => {
                 const itemDate = new Date(item.date);
                 const formattedTime = itemDate.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
+
+                const anim = reminderAnimations.current[index];
+                const style = anim ? {
+                  opacity: anim.opacity,
+                  transform: [{ translateY: anim.translateY }],
+                } : {};
+
                 return (
-                  <TouchableOpacity 
-                    style={styles.listItem}
-                    onPress={() => navigation.navigate('Reminder', { screen: 'ReminderDetail', params: { reminderId: item.id } })}
-                  >
-                    <Ionicons name={item.icon} size={24} color={COLORS.primaryDark} style={styles.listItemIcon} />
-                    <View style={styles.listItemTextContainer}>
+                  <Animated.View style={style}>
+                    <TouchableOpacity
+                      style={styles.listItem}
+                      onPress={() => navigation.navigate('Reminder', {
+                        screen: 'ReminderDetail',
+                        params: { reminderId: item.id },
+                      })}
+                    >
+                      <Ionicons name={item.icon} size={24} color={COLORS.primaryDark} style={styles.listItemIcon} />
+                      <View style={styles.listItemTextContainer}>
                         <Text style={styles.listText}>{item.title}</Text>
                         <Text style={styles.listSubText}>Hari ini, pukul {formattedTime}</Text>
-                    </View>
-                    <Ionicons name="chevron-forward-outline" size={22} color={COLORS.textSecondary} />
-                  </TouchableOpacity>
-                )
+                      </View>
+                      <Ionicons name="chevron-forward-outline" size={22} color={COLORS.textSecondary} />
+                    </TouchableOpacity>
+                  </Animated.View>
+                );
               }}
             />
           ) : (
@@ -163,7 +227,7 @@ const styles = StyleSheet.create({
     marginBottom: 12,
     elevation: 4,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2},
+    shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 5,
   },
@@ -225,7 +289,7 @@ const styles = StyleSheet.create({
     fontSize: 15,
     color: COLORS.textSecondary,
     textAlign: 'center',
-  }
+  },
 });
 
 export default HomeScreen;
