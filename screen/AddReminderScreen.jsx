@@ -12,8 +12,10 @@ import {
   TouchableOpacity // Ditambahkan untuk DateTimePicker
 } from 'react-native';
 import DateTimePicker from '@react-native-community/datetimepicker'; // DateTimePicker diaktifkan
+import { createReminder } from '../services/ReminderServices';
 import { ReminderContext } from '../context/ReminderContext';
 import COLORS from '../constant/colors'; 
+
 
 const AddReminderScreen = ({ navigation }) => {
   const { setReminders } = useContext(ReminderContext);
@@ -36,33 +38,36 @@ const AddReminderScreen = ({ navigation }) => {
     setTime(currentTime);
   };
 
-  const handleSaveReminder = () => {
-    if (!title.trim()) {
-      Alert.alert('Input Tidak Valid', 'Judul pengingat tidak boleh kosong!');
-      return;
-    }
+  const handleSaveReminder = async () => {
+  if (!title.trim()) {
+    Alert.alert('Input Tidak Valid', 'Judul pengingat tidak boleh kosong!');
+    return;
+  }
 
-    const reminderDateTime = new Date(
-      date.getFullYear(),
-      date.getMonth(),
-      date.getDate(),
-      time.getHours(),
-      time.getMinutes()
-    );
+  const reminderDateTime = new Date(
+    date.getFullYear(),
+    date.getMonth(),
+    date.getDate(),
+    time.getHours(),
+    time.getMinutes()
+  );
 
-    const newReminder = {
-      id: Date.now().toString(),
-      title: title.trim(),
-      date: reminderDateTime.toISOString(),
-      notes: notes.trim(),
-      icon: 'notifications-outline', 
-    };
-    
-    setReminders(prevReminders => [...prevReminders, newReminder]);
-    
+  const newReminder = {
+    title: title.trim(),
+    date: reminderDateTime.toISOString(),
+    notes: notes.trim(),
+    icon: 'notifications-outline',
+  };
+
+  try {
+    await createReminder(newReminder); // Panggil dari services
     Alert.alert('Sukses', 'Pengingat berhasil disimpan!');
     navigation.goBack();
-  };
+  } catch (error) {
+    console.error(error);
+    Alert.alert('Gagal', 'Gagal menyimpan pengingat');
+  }
+};
 
   return (
     <ScrollView style={styles.container} keyboardShouldPersistTaps="handled">

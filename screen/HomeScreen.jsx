@@ -1,4 +1,4 @@
-import React, { useState, useContext, useMemo, useRef, useEffect } from 'react';
+import React, { useState, useContext, useEffect, useRef } from 'react';
 import {
   View,
   Text,
@@ -25,16 +25,8 @@ const SummaryCard = ({ icon, title, value, color, onPress, animation }) => (
 );
 
 const HomeScreen = ({ navigation }) => {
-  const [name, setName] = useState('Pengguna');
+  const [name] = useState('Pengguna');
   const { reminders } = useContext(ReminderContext);
-
-  const upcomingReminders = useMemo(() => {
-    const now = new Date();
-    return reminders
-      .filter(r => new Date(r.date) > now)
-      .sort((a, b) => new Date(a.date) - new Date(b.date))
-      .slice(0, 3);
-  }, [reminders]);
 
   const imageUrls = [
     'https://images.unsplash.com/photo-1587502536263-9298f1a8b9ef?auto=format&fit=crop&w=800&q=60',
@@ -42,14 +34,11 @@ const HomeScreen = ({ navigation }) => {
     'https://images.unsplash.com/photo-1605296867304-46d5465a13f1?auto=format&fit=crop&w=800&q=60',
   ];
 
-  // Animasi Summary Cards
   const summaryAnimations = [useRef(new Animated.Value(0)).current, useRef(new Animated.Value(0)).current, useRef(new Animated.Value(0)).current];
-
-  // Animasi Reminder List
   const reminderAnimations = useRef([]);
 
   useEffect(() => {
-    // Jalankan animasi summary card
+    // Jalankan animasi summary cards
     Animated.stagger(200,
       summaryAnimations.map(anim =>
         Animated.timing(anim, {
@@ -59,8 +48,8 @@ const HomeScreen = ({ navigation }) => {
         })
       )
     ).start(() => {
-      // Inisialisasi animasi reminder
-      reminderAnimations.current = upcomingReminders.map(() => ({
+      // Inisialisasi animasi list reminder
+      reminderAnimations.current = reminders.map(() => ({
         opacity: new Animated.Value(0),
         translateY: new Animated.Value(20),
       }));
@@ -135,37 +124,44 @@ const HomeScreen = ({ navigation }) => {
           />
         </View>
 
-        {/* Upcoming Reminders */}
+        {/* Semua Pengingat */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Segera Dilakukan</Text>
-          {upcomingReminders.length > 0 ? (
+          <Text style={styles.sectionTitle}>Semua Pengingat</Text>
+          {reminders.length > 0 ? (
             <Animated.FlatList
-              data={upcomingReminders}
+              data={reminders}
               keyExtractor={(item) => item.id}
               scrollEnabled={false}
               renderItem={({ item, index }) => {
                 const itemDate = new Date(item.date);
-                const formattedTime = itemDate.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
+                const formattedTime = itemDate.toLocaleTimeString('id-ID', {
+                  hour: '2-digit',
+                  minute: '2-digit',
+                });
 
                 const anim = reminderAnimations.current[index];
-                const style = anim ? {
-                  opacity: anim.opacity,
-                  transform: [{ translateY: anim.translateY }],
-                } : {};
+                const style = anim
+                  ? {
+                      opacity: anim.opacity,
+                      transform: [{ translateY: anim.translateY }],
+                    }
+                  : {};
 
                 return (
                   <Animated.View style={style}>
                     <TouchableOpacity
                       style={styles.listItem}
-                      onPress={() => navigation.navigate('Reminder', {
-                        screen: 'ReminderDetail',
-                        params: { reminderId: item.id },
-                      })}
+                      onPress={() =>
+                        navigation.navigate('Reminder', {
+                          screen: 'ReminderDetail',
+                          params: { reminderId: item.id },
+                        })
+                      }
                     >
-                      <Ionicons name={item.icon} size={24} color={COLORS.primaryDark} style={styles.listItemIcon} />
+                      <Ionicons name={item.icon || 'notifications-outline'} size={24} color={COLORS.primaryDark} style={styles.listItemIcon} />
                       <View style={styles.listItemTextContainer}>
                         <Text style={styles.listText}>{item.title}</Text>
-                        <Text style={styles.listSubText}>Hari ini, pukul {formattedTime}</Text>
+                        <Text style={styles.listSubText}>{itemDate.toLocaleDateString('id-ID')} - {formattedTime}</Text>
                       </View>
                       <Ionicons name="chevron-forward-outline" size={22} color={COLORS.textSecondary} />
                     </TouchableOpacity>
@@ -175,7 +171,7 @@ const HomeScreen = ({ navigation }) => {
             />
           ) : (
             <View style={styles.emptyListContainer}>
-              <Text style={styles.emptyListText}>Tidak ada pengingat yang akan datang.</Text>
+              <Text style={styles.emptyListText}>Belum ada pengingat.</Text>
             </View>
           )}
         </View>

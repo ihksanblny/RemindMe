@@ -1,134 +1,181 @@
-// screen/ReminderDetailScreen.jsx
-import React, { useContext } from 'react';
-import { View, Text, StyleSheet, SafeAreaView, ScrollView } from 'react-native';
-import { ReminderContext } from '../context/ReminderContext';
-import COLORS from '../constant/colors'; 
+import React, { useState, useEffect } from 'react';
+import {
+  View,
+  Text,
+  StyleSheet,
+  Alert,
+  TouchableOpacity,
+  ActivityIndicator,
+} from 'react-native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
+import { useFocusEffect } from '@react-navigation/native';
+import { useCallback } from 'react';
+import COLORS from '../constant/colors';
+import {
+  getReminderById,
+  deleteReminder,
+} from '../services/ReminderServices';
 
-// Komponen ini menerima 'route' untuk mendapatkan parameter navigasi
-const ReminderDetailScreen = ({ route }) => {
-  // 1. Ambil ID pengingat yang dikirim dari layar sebelumnya
+const ReminderDetailScreen = ({ route, navigation }) => {
   const { reminderId } = route.params;
+  const [reminder, setReminder] = useState(null);
+  const [loading, setLoading] = useState(true);
 
-  // 2. Ambil seluruh daftar pengingat dari context
-  const { reminders } = useContext(ReminderContext);
+  const fetchReminder = async () => {
+    try {
+      const data = await getReminderById(reminderId);
+      setReminder(data);
+    } catch (error) {
+      console.error(error);
+      Alert.alert('Error', 'Gagal mengambil data pengingat.');
+    } finally {
+      setLoading(false);
+    }
+  };
 
-  // 3. Cari pengingat yang cocok berdasarkan ID
-  const reminder = reminders.find(r => r.id === reminderId);
+  const handleDeleteReminder = () => {
+    Alert.alert('Hapus Pengingat', 'Yakin ingin menghapus?', [
+      { text: 'Batal', style: 'cancel' },
+      {
+        text: 'Hapus',
+        style: 'destructive',
+        onPress: async () => {
+          try {
+            await deleteReminder(reminderId);
+            Alert.alert('Berhasil', 'Pengingat dihapus');
+            navigation.goBack();
+          } catch (error) {
+            Alert.alert('Gagal', 'Tidak bisa menghapus pengingat.');
+          }
+        },
+      },
+    ]);
+  };
 
-  // 4. Jika karena suatu hal pengingat tidak ditemukan, tampilkan pesan
-  if (!reminder) {
-    return (
-      <SafeAreaView style={styles.safeArea}>
-        <View style={styles.container}>
-          <Text style={styles.errorText}>Pengingat tidak ditemukan.</Text>
-        </View>
-      </SafeAreaView>
-    );
-  }
+  useFocusEffect(
+  useCallback(() => {
+    fetchReminder();
+  }, [reminderId])
+);
 
-  // 5. Format tanggal dan waktu agar mudah dibaca
-  const reminderDate = new Date(reminder.date);
-  const formattedDate = reminderDate.toLocaleDateString('id-ID', {
-    weekday: 'long',
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric',
-  });
-  const formattedTime = reminderDate.toLocaleTimeString('id-ID', {
-    hour: '2-digit',
-    minute: '2-digit',
-  });
+  if (loading) return <ActivityIndicator size="large" color={COLORS.primary} style={styles.loading} />;
 
   return (
-    <SafeAreaView style={styles.safeArea}>
-      <ScrollView style={styles.container}>
+    <View style={styles.container}>
+      <View style={styles.card}>
         <View style={styles.header}>
-          <Ionicons name={reminder.icon || 'notifications'} size={40} color={COLORS.primary} />
+          <Ionicons
+            name={reminder.icon || 'notifications-outline'}
+            size={40}
+            color={COLORS.primary}
+            style={{ marginRight: 12 }}
+          />
           <Text style={styles.title}>{reminder.title}</Text>
         </View>
 
-        <View style={styles.detailCard}>
-          <View style={styles.detailRow}>
-            <Ionicons name="calendar-outline" size={24} color={COLORS.primaryDark} style={styles.icon} />
-            <Text style={styles.detailText}>{formattedDate}</Text>
-          </View>
-          <View style={styles.detailRow}>
-            <Ionicons name="time-outline" size={24} color={COLORS.primaryDark} style={styles.icon} />
-            <Text style={styles.detailText}>{formattedTime} WIB</Text>
-          </View>
+        <View style={styles.section}>
+          <Ionicons name="calendar-outline" size={20} color={COLORS.accentIndigo} />
+          <Text style={styles.date}>
+            {new Date(reminder.date).toLocaleString('id-ID')}
+          </Text>
         </View>
 
         {reminder.notes ? (
-          <View style={styles.notesCard}>
-            <Text style={styles.notesTitle}>Catatan:</Text>
-            <Text style={styles.notesText}>{reminder.notes}</Text>
+          <View style={styles.section}>
+            <Ionicons name="document-text-outline" size={20} color={COLORS.accentIndigo} />
+            <Text style={styles.notes}>{reminder.notes}</Text>
           </View>
         ) : null}
-      </ScrollView>
-    </SafeAreaView>
+
+        <View style={styles.buttonContainer}>
+          <TouchableOpacity
+            style={[styles.button, { backgroundColor: COLORS.accentIndigo }]}
+            onPress={() => navigation.navigate('EditReminder', { reminder })}
+          >
+            <Ionicons name="pencil-outline" size={20} color="white" />
+            <Text style={styles.buttonText}>Edit</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={[styles.button, { backgroundColor: COLORS.red }]}
+            onPress={handleDeleteReminder}
+          >
+            <Ionicons name="trash-outline" size={20} color="white" />
+            <Text style={styles.buttonText}>Hapus</Text>
+          </TouchableOpacity>
+        </View>
+      </View>
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
-  safeArea: {
+  loading: {
     flex: 1,
-    backgroundColor: COLORS.lightGreenBackground,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   container: {
     flex: 1,
+    backgroundColor: COLORS.background,
     padding: 20,
+  },
+  card: {
+    backgroundColor: COLORS.white,
+    borderRadius: 16,
+    padding: 20,
+    elevation: 6,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.2,
+    shadowRadius: 5,
   },
   header: {
-    alignItems: 'center',
-    marginBottom: 30,
-  },
-  title: {
-    fontSize: 28,
-    fontWeight: 'bold',
-    color: COLORS.primaryDark,
-    marginTop: 10,
-    textAlign: 'center',
-  },
-  detailCard: {
-    backgroundColor: COLORS.white,
-    borderRadius: 12,
-    padding: 20,
-    marginBottom: 20,
-    elevation: 2,
-  },
-  detailRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 15,
+    marginBottom: 20,
   },
-  icon: {
-    marginRight: 15,
-  },
-  detailText: {
-    fontSize: 17,
-    color: COLORS.text,
-  },
-  notesCard: {
-    backgroundColor: '#e6fffa', // Warna mint yang sangat terang
-    borderRadius: 12,
-    padding: 20,
-  },
-  notesTitle: {
-    fontSize: 16,
+  title: {
+    fontSize: 26,
     fontWeight: 'bold',
-    color: COLORS.primaryDark,
-    marginBottom: 8,
-  },
-  notesText: {
-    fontSize: 16,
     color: COLORS.text,
-    lineHeight: 24,
+    flexShrink: 1,
   },
-  errorText: {
-    fontSize: 18,
-    color: 'red',
-    textAlign: 'center',
+  section: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  date: {
+    marginLeft: 8,
+    fontSize: 16,
+    color: COLORS.textSecondary,
+  },
+  notes: {
+    marginLeft: 8,
+    fontSize: 16,
+    color: COLORS.textSecondary,
+    flexShrink: 1,
+  },
+  buttonContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginTop: 30,
+  },
+  button: {
+    flexDirection: 'row',
+    flex: 1,
+    marginHorizontal: 5,
+    paddingVertical: 12,
+    borderRadius: 10,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  buttonText: {
+    color: 'white',
+    fontWeight: '600',
+    fontSize: 16,
+    marginLeft: 8,
   },
 });
 

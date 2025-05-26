@@ -8,6 +8,7 @@ const COLORS = {
   background: '#f0fdf4',     // Background utama layar (Mint sangat muda)
   surface: '#ffffff',         // Warna dasar untuk kartu/permukaan
   white: '#ffffff',           // Putih
+  red: '#ef4444',            // Merah untuk notifikasi error
 
   text: '#1f2937',            // Teks utama (Abu-abu tua)
   textSecondary: '#4b5563',   // Teks sekunder (Abu-abu lebih muda)

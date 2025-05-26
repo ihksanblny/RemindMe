@@ -17,6 +17,7 @@ import AddReminderScreen from './screen/AddReminderScreen';
 import ReminderDetailScreen from './screen/ReminderDetailScreen';
 import ProfileScreen from './screen/ProfileScreen';
 import EditProfileScreen from './screen/EditProfileScreen';
+import EditReminderScreen from './screen/EditReminderScreen';
 import { ReminderProvider } from './context/ReminderContext';
 
 const RootStack = createStackNavigator();
@@ -47,6 +48,7 @@ function ReminderFeatureNavigator() {
       />
       <ReminderStack.Screen name="AddNewReminder" component={AddReminderScreen} options={{ title: 'Tambah Pengingat' }} />
       <ReminderStack.Screen name="ReminderDetail" component={ReminderDetailScreen} options={{ title: 'Detail Pengingat' }} />
+      <ReminderStack.Screen name="EditReminder" component={EditReminderScreen} options={{ title: 'Edit Pengingat' }} />
     </ReminderStack.Navigator>
   );
 }
