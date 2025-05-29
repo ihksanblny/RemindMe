@@ -1,27 +1,31 @@
-// screen/AddReminderScreen.jsx
 import React, { useState, useContext } from 'react';
-import { 
-  View, 
-  Text, 
-  TextInput, 
-  Button, 
-  StyleSheet, 
-  ScrollView, 
-  Platform, 
+import {
+  View,
+  Text,
+  TextInput,
+  Button,
+  StyleSheet,
+  ScrollView,
+  Platform,
   Alert,
-  TouchableOpacity // Ditambahkan untuk DateTimePicker
+  TouchableOpacity
 } from 'react-native';
-import DateTimePicker from '@react-native-community/datetimepicker'; // DateTimePicker diaktifkan
+import DateTimePicker from '@react-native-community/datetimepicker';
 import { createReminder } from '../services/ReminderServices';
 import { ReminderContext } from '../context/ReminderContext';
-import COLORS from '../constant/colors'; 
+import COLORS from '../constant/colors';
 
+// Notifee untuk local notification
+import notifee, {
+  AndroidImportance,
+  TriggerType,
+} from '@notifee/react-native';
 
 const AddReminderScreen = ({ navigation }) => {
   const { setReminders } = useContext(ReminderContext);
   const [title, setTitle] = useState('');
-  const [date, setDate] = useState(new Date()); 
-  const [time, setTime] = useState(new Date()); 
+  const [date, setDate] = useState(new Date());
+  const [time, setTime] = useState(new Date());
   const [notes, setNotes] = useState('');
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [showTimePicker, setShowTimePicker] = useState(false);
@@ -38,36 +42,69 @@ const AddReminderScreen = ({ navigation }) => {
     setTime(currentTime);
   };
 
-  const handleSaveReminder = async () => {
-  if (!title.trim()) {
-    Alert.alert('Input Tidak Valid', 'Judul pengingat tidak boleh kosong!');
-    return;
-  }
+  const scheduleNotification = async (reminder) => {
+    await notifee.requestPermission();
 
-  const reminderDateTime = new Date(
-    date.getFullYear(),
-    date.getMonth(),
-    date.getDate(),
-    time.getHours(),
-    time.getMinutes()
-  );
+    const channelId = await notifee.createChannel({
+      id: 'reminder',
+      name: 'Reminder Notifications',
+      importance: AndroidImportance.HIGH,
+    });
 
-  const newReminder = {
-    title: title.trim(),
-    date: reminderDateTime.toISOString(),
-    notes: notes.trim(),
-    icon: 'notifications-outline',
+    const reminderTime = new Date(reminder.date).getTime();
+
+    await notifee.createTriggerNotification(
+      {
+        title: 'Pengingat: ' + reminder.title,
+        body: reminder.notes || 'Jangan lupa aktivitas kesehatanmu!',
+        android: {
+          channelId,
+          pressAction: { id: 'default' },
+        },
+      },
+      {
+        type: TriggerType.TIMESTAMP,
+        timestamp: reminderTime,
+      }
+    );
   };
 
-  try {
-    await createReminder(newReminder); // Panggil dari services
-    Alert.alert('Sukses', 'Pengingat berhasil disimpan!');
-    navigation.goBack();
-  } catch (error) {
-    console.error(error);
-    Alert.alert('Gagal', 'Gagal menyimpan pengingat');
-  }
-};
+  const handleSaveReminder = async () => {
+    if (!title.trim()) {
+      Alert.alert('Input Tidak Valid', 'Judul pengingat tidak boleh kosong!');
+      return;
+    }
+
+    const reminderDateTime = new Date(
+      date.getFullYear(),
+      date.getMonth(),
+      date.getDate(),
+      time.getHours(),
+      time.getMinutes()
+    );
+
+    if (reminderDateTime <= new Date()) {
+      Alert.alert('Waktu tidak valid', 'Waktu pengingat harus di masa depan.');
+      return;
+    }
+
+    const newReminder = {
+      title: title.trim(),
+      date: reminderDateTime.toISOString(),
+      notes: notes.trim(),
+      icon: 'notifications-outline',
+    };
+
+    try {
+      await createReminder(newReminder);
+      await scheduleNotification(newReminder);
+      Alert.alert('Sukses', 'Pengingat berhasil disimpan dan dijadwalkan!');
+      navigation.goBack();
+    } catch (error) {
+      console.error(error);
+      Alert.alert('Gagal', 'Gagal menyimpan pengingat.');
+    }
+  };
 
   return (
     <ScrollView style={styles.container} keyboardShouldPersistTaps="handled">
@@ -77,30 +114,32 @@ const AddReminderScreen = ({ navigation }) => {
         value={title}
         onChangeText={setTitle}
         placeholder="Cth: Minum Obat Pagi"
-        placeholderTextColor={COLORS.textSecondary || '#6b7280'}
+        placeholderTextColor={COLORS.textSecondary}
       />
 
       <Text style={styles.label}>Tanggal:</Text>
       <TouchableOpacity onPress={() => setShowDatePicker(true)} style={styles.dateDisplay}>
-        <Text style={styles.dateText}>{date.toLocaleDateString('id-ID', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</Text>
+        <Text style={styles.dateText}>
+          {date.toLocaleDateString('id-ID', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
+        </Text>
       </TouchableOpacity>
       {showDatePicker && (
         <DateTimePicker
-          testID="datePicker"
           value={date}
           mode="date"
           display={Platform.OS === 'ios' ? 'spinner' : 'default'}
           onChange={onChangeDate}
         />
       )}
-      
+
       <Text style={styles.label}>Waktu:</Text>
       <TouchableOpacity onPress={() => setShowTimePicker(true)} style={styles.dateDisplay}>
-        <Text style={styles.dateText}>{time.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })}</Text>
+        <Text style={styles.dateText}>
+          {time.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })}
+        </Text>
       </TouchableOpacity>
       {showTimePicker && (
         <DateTimePicker
-          testID="timePicker"
           value={time}
           mode="time"
           is24Hour={true}
@@ -115,15 +154,15 @@ const AddReminderScreen = ({ navigation }) => {
         value={notes}
         onChangeText={setNotes}
         placeholder="Detail pengingat..."
-        placeholderTextColor={COLORS.textSecondary || '#6b7280'}
+        placeholderTextColor={COLORS.textSecondary}
         multiline
         numberOfLines={4}
       />
-      
+
       <View style={styles.buttonContainer}>
-        <Button 
-          title="Simpan Pengingat" 
-          onPress={handleSaveReminder} 
+        <Button
+          title="Simpan Pengingat"
+          onPress={handleSaveReminder}
           color={COLORS.primary}
         />
       </View>
@@ -140,28 +179,28 @@ const styles = StyleSheet.create({
   label: {
     fontSize: 16,
     marginBottom: 8,
-    color: COLORS.primaryDark || '#065f46',
+    color: COLORS.primaryDark,
     fontWeight: '600',
   },
   input: {
-    backgroundColor: COLORS.white || '#ffffff',
+    backgroundColor: COLORS.white,
     borderWidth: 1,
-    borderColor: COLORS.border || '#d1d5db',
+    borderColor: COLORS.border,
     borderRadius: 8,
     paddingHorizontal: 14,
     paddingVertical: 12,
     fontSize: 16,
     marginBottom: 20,
-    color: COLORS.text || '#1f2937',
+    color: COLORS.text,
   },
   textArea: {
     minHeight: 100,
     textAlignVertical: 'top',
   },
   dateDisplay: {
-    backgroundColor: COLORS.white || '#ffffff',
+    backgroundColor: COLORS.white,
     borderWidth: 1,
-    borderColor: COLORS.border || '#d1d5db',
+    borderColor: COLORS.border,
     borderRadius: 8,
     paddingHorizontal: 14,
     paddingVertical: 15,
@@ -169,11 +208,11 @@ const styles = StyleSheet.create({
   },
   dateText: {
     fontSize: 16,
-    color: COLORS.text || '#1f2937',
+    color: COLORS.text,
   },
   buttonContainer: {
     marginTop: 20,
-  }
+  },
 });
 
 export default AddReminderScreen;
